@@ -1,0 +1,3 @@
+# Prevent mt76x2u (Wi-Fi driver) from claiming the Xbox Wireless Adapter
+# This allows the xone driver to bind to the device properly.
+SUBSYSTEM=="usb", ATTR{idVendor}=="045e", ATTR{idProduct}=="02fe", ACTION=="add", RUN+="/bin/sh -c 'echo -n %k > /sys/bus/usb/drivers/mt76x2u/unbind || true'"

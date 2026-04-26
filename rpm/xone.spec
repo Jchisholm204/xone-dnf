@@ -47,11 +47,16 @@ cp -r ./* %{buildroot}%{dkms_source_dir}
 # Remove the rpm directory from the installed source to keep it clean
 rm -rf %{buildroot}%{dkms_source_dir}/rpm
 
+# Install the udev rule to handle the MediaTek driver conflict
+install -D -m 0644 install/99-xone-unbind.rules %{buildroot}%{_udevrulesdir}/99-xone-unbind.rules
+
 %post
 # Register and build the module using DKMS
 dkms add -m %{repo_name} -v %{version} --rpm_safe_upgrade || :
 dkms build -m %{repo_name} -v %{version} || :
 dkms install -m %{repo_name} -v %{version} || :
+/usr/bin/udevadm control --reload-rules
+/usr/bin/udevadm trigger --attr-match=idVendor=045e --attr-match=idProduct=02fe
 
 %preun
 # Remove the module from DKMS before uninstalling
@@ -61,6 +66,7 @@ dkms remove -m %{repo_name} -v %{version} --all --rpm_safe_upgrade || :
 %license LICENSE
 %doc README.md
 %{_usrsrc}/%{repo_name}-%{version}
+%{_udevrulesdir}/99-xone-unbind.rules
 
 %changelog
 * Sat Apr 25 2026 Jacob Chisholm <jacob@example.com> - 0.0.1-1
