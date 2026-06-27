@@ -50,6 +50,15 @@ rm -rf %{buildroot}%{dkms_source_dir}/rpm
 # Install the udev rule to handle the MediaTek driver conflict
 install -D -m 0644 install/99-xone-unbind.rules %{buildroot}%{_udevrulesdir}/99-xone-unbind.rules
 
+# Blacklist the WiFi module (mt76x2u)
+mkdir -p %{buildroot}%{_sysconfdir}/modprobe.d/
+
+# Create the blacklist file. Replace 'pcspkr' with the module you want to block.
+cat << EOF > %{buildroot}%{_sysconfdir}/modprobe.d/blacklist-mt76x2u.conf
+# Blocked by xone - Wireless Xbox Adapter DKMS Kernel Module
+blacklist mt76x2u
+EOF
+
 %post
 # Register and build the module using DKMS
 dkms add -m %{repo_name} -v %{version} --rpm_safe_upgrade || :
@@ -67,8 +76,12 @@ dkms remove -m %{repo_name} -v %{version} --all --rpm_safe_upgrade || :
 %doc README.md
 %{_usrsrc}/%{repo_name}-%{version}
 %{_udevrulesdir}/99-xone-unbind.rules
+%config(noreplace) %{_sysconfdir}/modprobe.d/blacklist-mt76x2u.conf
 
 %changelog
+* Fri Jun 26 2026 Jacob Chisholm <jacob@example.com> - 0.0.1-2
+- Tested and working on EL10/F40/F44
+- Added blacklist for mt76x2u
 * Sat Apr 25 2026 Jacob Chisholm <jacob@example.com> - 0.0.1-1
 - Initial adaptation from Debian xone-dkms config
 - Targeted for Fedora 40 and AlmaLinux 10
